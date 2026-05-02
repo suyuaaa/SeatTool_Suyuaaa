@@ -1,0 +1,126 @@
+<view class="container">
+  <!-- 首页视图 -->
+  <block wx:if="{{currentView === 'home'}}">
+    <view class="home">
+      <view class="title">调座位的小工具</view>
+      <button class="main-btn" bindtap="switchView" data-view="classList">调座位</button>
+      <button class="main-btn secondary" bindtap="switchView" data-view="tutorial">教程</button>
+    </view>
+  </block>
+
+  <!-- 班级列表视图 -->
+  <block wx:if="{{currentView === 'classList'}}">
+    <view class="header">
+      <button size="mini" bindtap="switchView" data-view="home">← 返回</button>
+      <text class="page-title">班级列表</text>
+      <button size="mini" bindtap="switchView" data-view="edit" data-edit="">＋新建</button>
+    </view>
+    <scroll-view scroll-y class="list">
+      <view wx:for="{{classList}}" wx:key="*this" class="class-card"
+            bindtap="onClassTap" data-name="{{item}}"
+            bindlongpress="onClassLongPress" data-name="{{item}}">
+        <text class="class-name">{{item}}</text>
+        <text class="arrow">›</text>
+      </view>
+      <view wx:if="{{classList.length === 0}}" class="empty">暂无班级，请新建</view>
+    </scroll-view>
+  </block>
+
+  <!-- 编辑视图 -->
+  <block wx:if="{{currentView === 'edit'}}">
+    <view class="header">
+      <button size="mini" bindtap="switchView" data-view="classList">← 返回</button>
+      <text class="page-title">{{isEdit ? '编辑班级' : '新建班级'}}</text>
+    </view>
+    <scroll-view scroll-y class="form-scroll">
+      <view class="form-item">
+        <text class="label">班级名称</text>
+        <input class="input" value="{{editData.className}}" bindinput="onEditField" data-field="className" placeholder="请输入班级名称" disabled="{{isEdit}}"/>
+      </view>
+
+      <view class="section-title">教室规格</view>
+      <view class="row">
+        <text>行数 N</text>
+        <input type="number" value="{{editData.N}}" bindinput="onEditField" data-field="N" class="small-input"/>
+        <text>列数 M</text>
+        <input type="number" value="{{editData.M}}" bindinput="onEditField" data-field="M" class="small-input"/>
+      </view>
+
+      <!-- 讲台区域已移除，默认无讲台 -->
+
+      <view class="section-title">学生信息</view>
+      <view wx:for="{{editData.students}}" wx:key="index" class="student-row">
+        <input placeholder="姓名" value="{{item.name}}" data-index="{{index}}" bindinput="onStudentName"/>
+        <input type="digit" placeholder="程度" value="{{item.level}}" data-index="{{index}}" bindinput="onStudentLevel"/>
+        <button size="mini" bindtap="deleteStudent" data-index="{{index}}">删</button>
+      </view>
+      <button size="mini" bindtap="addStudent">＋添加学生</button>
+
+      <view class="section-title">DH组（不相邻）</view>
+      <view wx:for="{{editData.dhGroups}}" wx:key="index" class="dh-row">
+        <input placeholder="学生逗号分隔" value="{{item}}" data-index="{{index}}" bindinput="onDhGroupInput"/>
+        <button size="mini" bindtap="deleteDhGroup" data-index="{{index}}">删</button>
+      </view>
+      <button size="mini" bindtap="addDhGroup">＋添加组</button>
+
+      <view class="section-title">已占用坐标</view>
+      <view wx:for="{{editData.occupied}}" wx:key="index" class="occupied-row">
+        <input placeholder="x" type="number" value="{{item.x}}" data-index="{{index}}" data-field="x" bindinput="onOccupiedInput"/>
+        <text>,</text>
+        <input placeholder="y" type="number" value="{{item.y}}" data-index="{{index}}" data-field="y" bindinput="onOccupiedInput"/>
+        <button size="mini" bindtap="deleteOccupied" data-index="{{index}}">删</button>
+      </view>
+      <button size="mini" bindtap="addOccupied">＋添加点</button>
+
+      <button class="save-btn" bindtap="saveClass">保存班级</button>
+    </scroll-view>
+  </block>
+
+  <!-- 排座结果视图 -->
+  <block wx:if="{{currentView === 'result'}}">
+    <view class="header">
+      <button size="mini" bindtap="switchView" data-view="classList">← 返回</button>
+      <text class="page-title">{{currentClass}} 排座结果</text>
+      <button size="mini" bindtap="rearrange">重新排座</button>
+    </view>
+    <scroll-view scroll-x scroll-y class="grid">
+      <view class="row" wx:for="{{resultMatrix}}" wx:key="index">
+        <view class="cell" wx:for="{{item}}" wx:for-item="cell" wx:key="index"
+              style="background-color:{{cell ? '#e0f7e0' : '#f0f0f0'}}">
+          <text>{{cell}}</text>
+        </view>
+      </view>
+    </scroll-view>
+    <view wx:if="{{loading}}" class="loading">计算中...</view>
+  </block>
+
+  <!-- 教程视图 -->
+  <block wx:if="{{currentView === 'tutorial'}}">
+    <view class="header">
+      <button size="mini" bindtap="switchView" data-view="home">← 返回</button>
+      <text class="page-title">使用教程</text>
+    </view>
+    <scroll-view scroll-y class="tutorial">
+      <view class="tutorial-section">
+        <text class="tutorial-title">1. 新建班级</text>
+        <text class="tutorial-text">在班级列表点击“+ 新建”，输入班级名称，设置教室的行数（N）和列数（M）。</text>
+      </view>
+      <view class="tutorial-section">
+        <text class="tutorial-title">2. 添加学生</text>
+        <text class="tutorial-text">填写学生姓名和爱说话程度（1-10，数字越大越爱说话），可添加多名学生。</text>
+      </view>
+      <view class="tutorial-section">
+        <text class="tutorial-title">3. 设置约束（可选）</text>
+        <text class="tutorial-text">· DH组：同一组内的学生不会被安排在相邻位置（八方向）。\n· 已占用坐标：指定某些座位不可用（如坏桌椅）。</text>
+      </view>
+      <view class="tutorial-section">
+        <text class="tutorial-title">4. 生成座位</text>
+        <text class="tutorial-text">保存班级后返回列表，点击班级名称即可自动排座。算法会尽量让爱说话程度相近的学生坐在一起，同时避开 DH 组和占用坐标。</text>
+      </view>
+      <view class="tutorial-section">
+        <text class="tutorial-title">5. 查看结果</text>
+        <text class="tutorial-text">座位表会以网格显示，绿色格子为已安排的学生，灰色为空位。可点击“重新排座”更换方案。</text>
+      </view>
+    </scroll-view>
+  </block>
+</view>

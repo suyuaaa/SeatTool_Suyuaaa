@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "pages/main/main"
+  ],
+  "window": {
+    "navigationBarTitleText": "调座位小工具",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black"
+  }
+}
