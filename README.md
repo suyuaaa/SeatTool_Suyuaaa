@@ -40,3 +40,5 @@
     https://github.com/suyuaaa/SeatTool_Suyuaaa
     ## 许可证
     - MIT许可证
+    ## 联系方式
+    - **邮箱**：suruishiyigerenaaa@tutamail.com
